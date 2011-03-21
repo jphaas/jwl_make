@@ -6,7 +6,7 @@ from shutil import rmtree
 import sys
 import shutil
 from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
-import tornado.web
+import tornado.web, tornado.auth
 #import fabric.api as fab
 
 def sys_call(args,cwd=None):
@@ -67,6 +67,10 @@ def do_action(project, actionargs, deploypath, global_config):
                     raise
             sys_call('git pull ' + url + ' master', dpath)
                
+    
+    cookie_secret = reader.config('basic', 'cookie_secret')
+    
+               
     #revert to the old path, then add dependencies
     del sys.path[:]
     sys.path.extend(clean_path)
@@ -96,8 +100,27 @@ def do_action(project, actionargs, deploypath, global_config):
     urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": htmlpath}))
     
     
+    #TEST GOOGLE STUFF
+    class GoogleHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+        @tornado.web.asynchronous
+        def get(self):
+            if self.get_argument("openid.mode", None):
+                self.get_authenticated_user(self._on_auth)
+                return
+            self.authorize_redirect('https://mail.google.com/', callback_uri='http://jphaas.dyndns.info:333/login')
+
+        def _on_auth(self, user):
+            if not user:
+                self.authorize_redirect('https://mail.google.com/', callback_uri='http://jphaas.dyndns.info:333/login')
+                return
+            self.write('hello')
+            self.finish()
+            # Save the user with, e.g., set_secure_cookie()
+    urlhandlers.append((r"/login", GoogleHandler))
+    
+    
     print 'starting local server...'
-    urlhandlers.append((r"/" + reader.server_prefix, make_handler(index.main)))
-    application = tornado.web.Application(urlhandlers)
+    urlhandlers.append((r"/" + reader.server_prefix, index.main))
+    application = tornado.web.Application(urlhandlers, cookie_secret=cookie_secret)
  
     launch(application, int(global_config.get('local', 'port')))
