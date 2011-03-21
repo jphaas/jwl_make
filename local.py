@@ -69,6 +69,8 @@ def do_action(project, actionargs, deploypath, global_config):
                
     
     cookie_secret = reader.config('basic', 'cookie_secret')
+    google_consumer_key = reader.config('google', 'consumer_key')
+    google_consumer_secret = reader.config('google', 'consumer_secret')
     
                
     #revert to the old path, then add dependencies
@@ -107,6 +109,6 @@ def do_action(project, actionargs, deploypath, global_config):
     
     print 'starting local server...'
     urlhandlers.append((r"/" + reader.server_prefix, index.main))
-    application = tornado.web.Application(urlhandlers, cookie_secret=cookie_secret)
+    application = tornado.web.Application(urlhandlers, cookie_secret=cookie_secret, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
  
     launch(application, int(global_config.get('local', 'port')))
