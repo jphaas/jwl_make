@@ -85,7 +85,7 @@ def do_action(project, actionargs, deploypath, global_config):
     
     import index
     from jwl.tornado_launch import launch
-    from jwl.remote_method import make_handler, make_dummy_handler
+    from jwl.remote_method import make_dummy_handler
     
     #write javascript function handlers
     from jwl import remote_method
@@ -100,23 +100,9 @@ def do_action(project, actionargs, deploypath, global_config):
     urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": htmlpath}))
     
     
-    #TEST GOOGLE STUFF
-    class GoogleHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-        @tornado.web.asynchronous
-        def get(self):
-            if self.get_argument("openid.mode", None):
-                self.get_authenticated_user(self._on_auth)
-                return
-            self.authorize_redirect('https://mail.google.com/', callback_uri='http://jphaas.dyndns.info:333/login')
-
-        def _on_auth(self, user):
-            if not user:
-                self.authorize_redirect('https://mail.google.com/', callback_uri='http://jphaas.dyndns.info:333/login')
-                return
-            self.write('hello')
-            self.finish()
-            # Save the user with, e.g., set_secure_cookie()
-    urlhandlers.append((r"/login", GoogleHandler))
+    #GOOGLE LOGIN
+    from jwl.googleauth import LoginController
+    urlhandlers.append((r"/auth/(.*)", LoginController))
     
     
     print 'starting local server...'
