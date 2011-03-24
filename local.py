@@ -27,9 +27,15 @@ def do_action(project, actionargs, deploypath, global_config):
             rmtree(p)
         makedirs(p)
         
+    config_data = {}
+    try:
+        config_data['facebook_app_id'] = global_config.get('facebook', 'facebook_appid_local')
+    except NoSectionError:
+        pass
+        
     urlhandlers = []
     #create the html pages
-    for sourcefile in reader.get_html():
+    for sourcefile in reader.get_html(config_data):
         stripped_name = basename(sourcefile.path).rsplit('.', 1)[0]
         gen(join(htmlpath, stripped_name), merge_source_file(sourcefile))
         urlhandlers.append((r"/(%s)"%stripped_name, tornado.web.StaticFileHandler, {"path": htmlpath}))
