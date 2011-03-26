@@ -22,7 +22,7 @@ def do_action(project, actionargs, deploypath, global_config):
     
     reader = JWLReader(project)
     
-    for p in (dependspath, codepath, staticpath, htmlpath):
+    for p in (dependspath, codepath, htmlpath):
         if exists(p):
             rmtree(p)
         makedirs(p)
@@ -42,6 +42,13 @@ def do_action(project, actionargs, deploypath, global_config):
         #pagenames.append(basename(sourcefile.path).rsplit('.', 1)[0])
  
     urlhandlers.append((r"/()", tornado.web.StaticFileHandler, {"path": htmlpath, "default_filename": "index"}))
+    
+    
+    #copy over resources
+    if exists(staticpath):
+        rmtree(staticpath)
+    shutil.copytree(reader.resources, staticpath)
+    urlhandlers.append((r"/" + reader.resource_prefix + "/(.*)", tornado.web.StaticFileHandler, {"path": staticpath}))
  
     #copy over any raw python files
     for file in reader.list_python():
@@ -105,13 +112,17 @@ def do_action(project, actionargs, deploypath, global_config):
         f.write('\n')
         f.write(make_dummy_handler(index.main).write_js_interface())
         
-    urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": htmlpath}))
-    
+    urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": htmlpath}))   
     
     #GOOGLE LOGIN
     from jwl.googleauth import LoginController
     urlhandlers.append((r"/auth/(.*)", LoginController))
     
+    #SETUP DEPLOY CONFIG
+    for section in global_config.sections():
+        if section.startswith('local_'):
+            for key, value in global_config.items(section):
+                deployconfig.set2('env.' + section[6:] + '.' + key, value)
     
     print 'starting local server...'
     urlhandlers.append((r"/" + reader.server_prefix, index.main))
