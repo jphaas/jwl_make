@@ -7,7 +7,7 @@ import sys
 import shutil
 from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
 import tornado.web, tornado.auth
-#import fabric.api as fab
+
 
 # def sys_call(args,cwd=None):
     # ret = subprocess.call(args, cwd=cwd, shell=True)
@@ -23,17 +23,7 @@ def do_action(project, actionargs, deploypath, global_config):
     staticpath = join(deploypath, 'static')
     htmlpath = join(deploypath, 'html')
     
-    
-    #server_side paths
-    server_dependspath = ""
-    server_codepath = "" 
-    server_staticpath = ""
-    server_htmlpath = ""
-    rserver_dependspath = repr(server_dependspath)
-    rserver_codepath = repr(server_codepath)
-    rserver_staticpath = repr(server_staticpath)
-    rserver_htmlpath = repr(server_htmlpath)
-    
+      
     reader = JWLReader(project)
     
     for p in (dependspath, codepath, htmlpath):
@@ -52,6 +42,18 @@ def do_action(project, actionargs, deploypath, global_config):
                 rvalue = repr(value)
                 dplines.append("deployconfig.set2('env.%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
                 config_data['env.' + section[len(envkey):] + '.' + key] = value
+                
+    #server_side paths
+    server_deploypath = config_data['env.basic.deploypath'] + '.' + target
+    server_dependspath = server_deploypath + '/depends'
+    server_codepath = server_deploypath + '/code'
+    server_staticpath = server_deploypath + '/static'
+    server_htmlpath = server_deploypath + '/html'
+    rserver_dependspath = repr(server_dependspath)
+    rserver_codepath = repr(server_codepath)
+    rserver_staticpath = repr(server_staticpath)
+    rserver_htmlpath = repr(server_htmlpath)
+
     
     gen(join(codepath, 'deployconfig_init.py'), '\n'.join(dplines))
     
@@ -161,3 +163,12 @@ launch(application, 80)
     """%locals()
     
     gen(join(codepath, 'launch_server.py'), launch_server)
+    
+    #Upload to server
+    import fabric.api as fab
+    try:
+        with fab.settings(host_string=config_data['env.basic.host']):
+            fab.rsync_project(remote_dir=config_data['env.basic.deploypath'], local_dir=deploypath, delete=True)
+            
+    finally:
+        fab.disconnect_all()
