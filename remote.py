@@ -199,12 +199,12 @@ launch(application, 80)
     import fabric.api as fab
     from fabric.contrib.project import rsync_project
     try:
-        with fab.settings(host_string=config_data['env.basic.host'],key_filename=keyfile):
+        with fab.settings(host_string=config_data['env.basic.host'],key_filename=keyfile,disable_known_hosts=True):
             with fab.settings(warn_only=True):
-                if fab.run("test -d %s" % server_deploypath).failed:
-                    fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
-            with fab.cd(server_deploypath):
-                fab.run('git pull')
+                remote_exists = not fab.run("test -d %s" % server_deploypath).failed
+            if remote_exists:
+                fab.run('rm -rf %s'%server_deploypath)
+            fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
     finally:
         from fabric.state import connections
         for key in connections.keys():
