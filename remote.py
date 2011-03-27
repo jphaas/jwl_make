@@ -156,6 +156,7 @@ def do_action(project, actionargs, deploypath, global_config):
             
     #build the execution file
     launch_server = r"""
+import sys
 sys.path.append(%(rserver_dependspath)s)
 sys.path.append(%(rserver_codepath)s)
 
@@ -167,8 +168,11 @@ import deployconfig_init
 # deployconfig.set(debug=True)
    
 import index
+import tornado
 from jwl.tornado_launch import launch
 from jwl.remote_method import make_dummy_handler
+
+urlhandlers = []
 
 %(urlhandlercode)s 
 
@@ -205,6 +209,7 @@ launch(application, 80)
             if remote_exists:
                 fab.run('rm -rf %s'%server_deploypath)
             fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
+            fab.run('sudo supervisorctl restart dating')
     finally:
         from fabric.state import connections
         for key in connections.keys():
