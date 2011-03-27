@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from os.path import dirname, join, exists, basename, splitext, isdir
 from os import listdir, mkdir, makedirs, remove, chdir
+import os
 import subprocess
 from shutil import rmtree
 import sys
@@ -8,11 +9,30 @@ import shutil
 from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
 import tornado.web, tornado.auth
 
+#patching rmtree so it can deal with readonly files
+def onerror(func, path, exc_info):
+    """
+    Error handler for ``shutil.rmtree``.
 
-# def sys_call(args,cwd=None):
-    # ret = subprocess.call(args, cwd=cwd, shell=True)
-    # if ret != 0:
-        # raise Exception('call failed: ' + args)
+    If the error is due to an access error (read only file)
+    it attempts to add write permission and then retries.
+
+    If the error is for another reason it re-raises the error.
+
+    Usage : ``shutil.rmtree(path, onerror=onerror)``
+    """
+    import stat
+    if not os.access(path, os.W_OK):
+        # Is the error an access error ?
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+    else:
+        raise
+
+def sys_call(args,cwd=None):
+    ret = subprocess.call(args, cwd=cwd, shell=True)
+    if ret != 0:
+        raise Exception('call failed: ' + args)
         
 def do_action(project, actionargs, deploypath, global_config):
     target = actionargs[0]
@@ -26,9 +46,10 @@ def do_action(project, actionargs, deploypath, global_config):
       
     reader = JWLReader(project)
     
+    if exists(deploypath):
+        rmtree(deploypath, onerror=onerror)
+    
     for p in (dependspath, codepath, htmlpath):
-        if exists(p):
-            rmtree(p)
         makedirs(p)
         
     #SETUP DEPLOY CONFIG
@@ -44,7 +65,7 @@ def do_action(project, actionargs, deploypath, global_config):
                 config_data['env.' + section[len(envkey):] + '.' + key] = value
                 
     #server_side paths
-    server_deploypath = config_data['env.basic.deploypath'] + '.' + target
+    server_deploypath = config_data['env.basic.deploypath']
     server_dependspath = server_deploypath + '/depends'
     server_codepath = server_deploypath + '/code'
     server_staticpath = server_deploypath + '/static'
@@ -164,11 +185,28 @@ launch(application, 80)
     
     gen(join(codepath, 'launch_server.py'), launch_server)
     
+    print 'about to upload...'
+    
+    #check in the local code to git
+    sys_call('git init', deploypath)
+    sys_call('git remote add origin git@github.com:jphaas/deploy_staging.git', deploypath)
+    sys_call('git add *', deploypath)
+    sys_call('git commit -m "automated..."', deploypath)
+    sys_call('git push --force -u origin master', deploypath)
+    
+    keyfile = global_config.get('keys', config_data['env.basic.sshkey'])    
     #Upload to server
     import fabric.api as fab
+    from fabric.contrib.project import rsync_project
     try:
-        with fab.settings(host_string=config_data['env.basic.host']):
-            fab.rsync_project(remote_dir=config_data['env.basic.deploypath'], local_dir=deploypath, delete=True)
-            
+        with fab.settings(host_string=config_data['env.basic.host'],key_filename=keyfile):
+            with fab.settings(warn_only=True):
+                if fab.run("test -d %s" % server_deploypath).failed:
+                    fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
+            with fab.cd(server_deploypath):
+                fab.run('git pull')
     finally:
-        fab.disconnect_all()
+        from fabric.state import connections
+        for key in connections.keys():
+            connections[key].close()
+            del connections[key]
