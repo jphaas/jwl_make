@@ -1,18 +1,12 @@
 from __future__ import with_statement
 from os.path import dirname, join, exists, basename, splitext, isdir
 from os import listdir, mkdir, makedirs, remove, chdir
-import subprocess
 from shutil import rmtree
 import sys
 import shutil
-from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
+from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import, sys_call
 import tornado.web, tornado.auth
 #import fabric.api as fab
-
-def sys_call(args,cwd=None):
-    ret = subprocess.call(args, cwd=cwd, shell=True)
-    if ret != 0:
-        raise Exception('call failed: ' + args)
         
 def do_action(project, actionargs, deploypath, global_config):
     dependspath = join(deploypath, 'depends')
@@ -21,6 +15,8 @@ def do_action(project, actionargs, deploypath, global_config):
     htmlpath = join(deploypath, 'html')
     
     reader = JWLReader(project)
+    
+    reader.compile_coffee()
     
     for p in (dependspath, codepath, htmlpath):
         if exists(p):
