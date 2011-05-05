@@ -180,9 +180,10 @@ urlhandlers = []
 # from jwl.googleauth import LoginController
 # urlhandlers.append((r"/auth/(.*)", LoginController))
 
-print 'starting server...'
-urlhandlers.append((r"/%(readerserverprefix)s", index.main))
-application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
+if __name__ == '__main__':
+    print 'starting server...'
+    urlhandlers.append((r"/%(readerserverprefix)s", index.main))
+    application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
 
 launch(application, 80)
     """%locals()
@@ -209,7 +210,7 @@ launch(application, 80)
             if remote_exists:
                 fab.run('rm -rf %s'%server_deploypath)
             fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
-            fab.run('sudo supervisorctl restart dating')
+            fab.run(config_data['env.basic.startcommand'])
     finally:
         from fabric.state import connections
         for key in connections.keys():
