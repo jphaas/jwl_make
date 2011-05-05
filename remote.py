@@ -46,6 +46,8 @@ def do_action(project, actionargs, deploypath, global_config):
       
     reader = JWLReader(project)
     
+    reader.compile_coffee()
+    
     if exists(deploypath):
         rmtree(deploypath, onerror=onerror)
     
