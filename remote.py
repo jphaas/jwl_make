@@ -165,6 +165,7 @@ sys.path.append(%(rserver_dependspath)s)
 sys.path.append(%(rserver_codepath)s)
 
 import deployconfig_init
+import deployconfig
 
 # from jwl import deployconfig
 # from jwl.DB.hashdb import HashDB
