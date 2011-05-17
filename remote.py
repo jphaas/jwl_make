@@ -165,11 +165,8 @@ sys.path.append(%(rserver_dependspath)s)
 sys.path.append(%(rserver_codepath)s)
 
 import deployconfig_init
-import deployconfig
+from jwl import deployconfig
 
-# from jwl import deployconfig
-# from jwl.DB.hashdb import HashDB
-# deployconfig.set(dbengine=HashDB)
 deployconfig.set(debug=%(is_debug)s)
    
 import index
@@ -214,7 +211,7 @@ launch(application, 80)
             if remote_exists:
                 fab.run('rm -rf %s'%server_deploypath)
             fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
-            fab.run('sudo supervisorctl restart dating')
+            fab.run(config_data['env.basic.startcommand'])
     finally:
         from fabric.state import connections
         for key in connections.keys():
