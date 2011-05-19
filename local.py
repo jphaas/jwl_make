@@ -119,6 +119,7 @@ def do_action(project, actionargs, deploypath, global_config):
         if section.startswith('local_'):
             for key, value in global_config.items(section):
                 deployconfig.set2('env.' + section[6:] + '.' + key, value)
+    deployconfig.set2('IS_LOCAL', True)
     
     print 'starting local server...'
     urlhandlers.append((r"/" + reader.server_prefix, index.main))
