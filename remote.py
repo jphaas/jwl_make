@@ -155,6 +155,8 @@ def do_action(project, actionargs, deploypath, global_config):
     urlhandlercode = '\n'.join(urlhandlers)
     
     readerserverprefix = reader.server_prefix
+    
+    is_debug = config_data['env.basic.debug']
             
     #build the execution file
     launch_server = r"""
@@ -163,11 +165,9 @@ sys.path.append(%(rserver_dependspath)s)
 sys.path.append(%(rserver_codepath)s)
 
 import deployconfig_init
+from jwl import deployconfig
 
-# from jwl import deployconfig
-# from jwl.DB.hashdb import HashDB
-# deployconfig.set(dbengine=HashDB)
-# deployconfig.set(debug=True)
+deployconfig.set(debug=%(is_debug)s)
    
 import index
 import tornado
