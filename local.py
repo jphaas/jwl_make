@@ -54,8 +54,6 @@ def do_action(project, actionargs, deploypath, global_config):
     #get the javascript necessary for server_interface
     server_interface_path = resolve_import('jwl_make2/server_interface.js', None)
     
-    print 'fetching dependencies'
-    
     #fetch the dependencies
     depends = reader.config_items('depends')
     for name, url in depends:
@@ -81,6 +79,8 @@ def do_action(project, actionargs, deploypath, global_config):
     google_consumer_key = reader.config('google', 'consumer_key')
     google_consumer_secret = reader.config('google', 'consumer_secret')
     
+    print 'cleaning sys.path...'
+    
                
     #revert to the old path, then add dependencies
     del sys.path[:]
@@ -88,15 +88,21 @@ def do_action(project, actionargs, deploypath, global_config):
     sys.path.append(dependspath)
     sys.path.append(codepath)
     
+    print 'importing deployconfig + hashdb'
     from jwl import deployconfig
     from jwl.DB.hashdb import HashDB
     deployconfig.set(dbengine=HashDB)
     deployconfig.set(debug=True)
        
-    
+    print 'importing index'
     import index
+    
+    print 'importing tornado launch'
     from jwl.tornado_launch import launch
+    print 'importing remote_method'
     from jwl.remote_method import make_dummy_handler
+    
+    print 'writing server_interface.js...'
     
     #write javascript function handlers
     from jwl import remote_method
@@ -113,6 +119,8 @@ def do_action(project, actionargs, deploypath, global_config):
     #GOOGLE LOGIN
     from jwl.googleauth import LoginController
     urlhandlers.append((r"/auth/(.*)", LoginController))
+    
+    print 'setting up deploy config...'
     
     #SETUP DEPLOY CONFIG
     for section in global_config.sections():
