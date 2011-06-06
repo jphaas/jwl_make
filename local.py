@@ -123,9 +123,11 @@ def do_action(project, actionargs, deploypath, global_config):
     print 'setting up deploy config...'
     
     #SETUP DEPLOY CONFIG
-    for section in global_config.sections():
+    print 'setting environment variables:'
+    for section in reader._config.sections():#global_config.sections():
         if section.startswith('local_'):
-            for key, value in global_config.items(section):
+            for key, value in reader._config.items(section):#global_config.items(section):
+                print 'env.' + section[6:] + '.' + key + ' = ' + value
                 deployconfig.set2('env.' + section[6:] + '.' + key, value)
     deployconfig.set2('IS_LOCAL', True)
     
