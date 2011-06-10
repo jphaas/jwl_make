@@ -65,6 +65,7 @@ def do_action(project, actionargs, deploypath, global_config):
                 rvalue = repr(value)
                 dplines.append("deployconfig.set2('env.%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
                 config_data['env.' + section[len(envkey):] + '.' + key] = value
+    config_data['env'] = target
                 
     #server_side paths
     server_deploypath = config_data['env.basic.deploypath']

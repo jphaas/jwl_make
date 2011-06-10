@@ -130,6 +130,7 @@ def do_action(project, actionargs, deploypath, global_config):
                 print 'env.' + section[6:] + '.' + key + ' = ' + value
                 deployconfig.set2('env.' + section[6:] + '.' + key, value)
     deployconfig.set2('IS_LOCAL', True)
+    deployconfig.set2('env', 'local')
     
     print 'starting local server...'
     urlhandlers.append((r"/" + reader.server_prefix, index.main))
