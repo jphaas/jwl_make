@@ -510,6 +510,9 @@ callback(success, data) -- called when the method returns.  If success is true, 
 */
 function method_call_raw(method, params, callback)
 {
+    if (typeof(callback) != 'function') {
+        throw 'callback must be a function, got: ' + callback;
+    }
     var p = params
 	for (pname in p)
 	{
