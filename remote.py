@@ -201,7 +201,7 @@ launch(application, 80)
     sys_call('git commit -m "automated..."', deploypath)
     sys_call('git push --force -u origin master', deploypath)
     
-    keyfile = global_config.get('keys', config_data['env.basic.sshkey'])    
+    keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
     #Upload to server
     import fabric.api as fab
     from fabric.contrib.project import rsync_project
