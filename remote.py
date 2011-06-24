@@ -48,12 +48,7 @@ def do_action(project, actionargs, deploypath, global_config):
     
     reader.compile_coffee()
     
-    if exists(deploypath):
-        rmtree(deploypath, onerror=onerror)
-    
-    for p in (dependspath, codepath, htmlpath):
-        makedirs(p)
-        
+       
     #SETUP DEPLOY CONFIG
     envkey = target + '_'
     dplines = ['from jwl import deployconfig']
@@ -77,6 +72,23 @@ def do_action(project, actionargs, deploypath, global_config):
     rserver_codepath = repr(server_codepath)
     rserver_staticpath = repr(server_staticpath)
     rserver_htmlpath = repr(server_htmlpath)
+    
+        
+    deployrepo = config_data['env.basic.deployrepo']
+    if not exists(deploypath):
+        makedirs(deploypath)
+        sys_call('git init', deploypath)
+        sys_call('git remote add origin ' + deployrepo, deploypath)
+        sys_call('git pull origin uploaded', deploypath)
+        sys_call('git branch uploaded', deploypath)
+        sys_call('git checkout uploaded', deploypath)
+    else: #clean but don't remove the .git directory
+        sys_call('git pull origin uploaded', deploypath)
+        for p in (dependspath, codepath, htmlpath, staticpath):
+            if exists(p): rmtree(p, onerror=onerror)
+        
+    for p in (dependspath, codepath, htmlpath, staticpath):
+        if not exists(p): makedirs(p)
 
     
     gen(join(codepath, 'deployconfig_init.py'), '\n'.join(dplines))
@@ -196,23 +208,22 @@ launch(application, 80)
     print 'about to upload...'
     
     #check in the local code to git
-    sys_call('git init', deploypath)
-    sys_call('git remote add origin git@github.com:jphaas/deploy_staging.git', deploypath)
     sys_call('git add *', deploypath)
     sys_call('git commit -m "automated..."', deploypath)
-    sys_call('git push --force -u origin master', deploypath)
+    sys_call('git push origin uploaded', deploypath)
     
     keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
     #Upload to server
     import fabric.api as fab
-    from fabric.contrib.project import rsync_project
     try:
         with fab.settings(host_string=config_data['env.basic.host'],key_filename=keyfile,disable_known_hosts=True):
-            with fab.settings(warn_only=True):
-                remote_exists = not fab.run("test -d %s" % server_deploypath).failed
-            if remote_exists:
-                fab.run('rm -rf %s'%server_deploypath)
-            fab.run("git clone git@github.com:jphaas/deploy_staging.git %s" % server_deploypath)
+            # with fab.settings(warn_only=True):
+                # remote_exists = not fab.run("test -d %s" % server_deploypath).failed
+            with fab.cd(server_deploypath):
+                with fab.settings(warn_only=True):
+                    fab.run('git add *')
+                    fab.run('git commit -m "saving any changes such as .pyc etc"')
+                fab.run('git merge uploaded')
             fab.run(config_data['env.basic.startcommand'])
     finally:
         from fabric.state import connections
