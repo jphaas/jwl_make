@@ -46,7 +46,12 @@ def do_action(project, actionargs, deploypath, global_config):
       
     reader = JWLReader(project)
     
+    #SWITCH TO RELEASE BRANCH
+    sys_call('git checkout release', reader.path)
+    
     reader.compile_coffee()
+    
+
     
        
     #SETUP DEPLOY CONFIG
