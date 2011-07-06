@@ -179,34 +179,34 @@ def do_action(project, actionargs, deploypath, global_config):
                 
         #build the execution file
         launch_server = r"""
-    import sys
-    sys.path.append(%(rserver_dependspath)s)
-    sys.path.append(%(rserver_codepath)s)
+import sys
+sys.path.append(%(rserver_dependspath)s)
+sys.path.append(%(rserver_codepath)s)
 
-    import deployconfig_init
-    from jwl import deployconfig
+import deployconfig_init
+from jwl import deployconfig
 
-    deployconfig.set(debug=%(is_debug)s)
-       
-    import index
-    import tornado
-    from jwl.tornado_launch import launch
-    from jwl.remote_method import make_dummy_handler
+deployconfig.set(debug=%(is_debug)s)
+   
+import index
+import tornado
+from jwl.tornado_launch import launch
+from jwl.remote_method import make_dummy_handler
 
-    urlhandlers = []
+urlhandlers = []
 
-    %(urlhandlercode)s 
+%(urlhandlercode)s 
 
-    #GOOGLE LOGIN
-    # from jwl.googleauth import LoginController
-    # urlhandlers.append((r"/auth/(.*)", LoginController))
+#GOOGLE LOGIN
+# from jwl.googleauth import LoginController
+# urlhandlers.append((r"/auth/(.*)", LoginController))
 
-    if __name__ == '__main__':
-        print 'starting server...'
-        urlhandlers.append((r"/%(readerserverprefix)s", index.main))
-        application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
+if __name__ == '__main__':
+    print 'starting server...'
+    urlhandlers.append((r"/%(readerserverprefix)s", index.main))
+    application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
 
-    launch(application, 80)
+launch(application, 80)
         """%locals()
         
         gen(join(codepath, 'launch_server.py'), launch_server)
