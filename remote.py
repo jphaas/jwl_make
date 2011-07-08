@@ -29,10 +29,13 @@ def onerror(func, path, exc_info):
     else:
         raise
 
-def sys_call(args,cwd=None):
+def sys_call(args,cwd=None, failokay=False):
     ret = subprocess.call(args, cwd=cwd, shell=True)
     if ret != 0:
-        raise Exception('call failed: ' + args)
+        if failokay:
+            print 'warning, call failed: ' + args
+        else:
+            raise Exception('call failed: ' + args)
         
 def do_action(project, actionargs, deploypath, global_config):
     target = actionargs[0]
@@ -215,7 +218,7 @@ launch(application, 80)
         
         #check in the local code to git
         sys_call('git add *', deploypath)
-        sys_call('git commit -m "automated..."', deploypath)
+        sys_call('git commit -a -m "automated..."', deploypath, failokay=True)
         sys_call('git push origin uploaded', deploypath)
         
         keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
