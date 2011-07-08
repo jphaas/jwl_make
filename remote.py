@@ -217,7 +217,7 @@ launch(application, 80)
         print 'about to upload...'
         
         #check in the local code to git
-        sys_call('git add *', deploypath)
+        sys_call('git add *', deploypath, failokay=True)
         sys_call('git commit -a -m "automated..."', deploypath, failokay=True)
         sys_call('git push origin uploaded', deploypath)
         
