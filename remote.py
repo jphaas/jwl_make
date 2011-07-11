@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from os.path import dirname, join, exists, basename, splitext, isdir
+from os.path import dirname, join, exists, basename, splitext, isdir, relpath
 from os import listdir, mkdir, makedirs, remove, chdir
 import os
 import subprocess
