@@ -117,7 +117,14 @@ def do_action(project, actionargs, deploypath, global_config):
         #copy over resources
         if exists(staticpath):
             rmtree(staticpath)
-        shutil.copytree(reader.resources, staticpath)
+        for sourcefile in reader.get_resources(config_data):
+            relative_path = relpath(sourcefile.path, reader.resources)
+            if not exists(join(staticpath, dirname(relative_path))): makedirs(join(staticpath, dirname(relative_path)))
+            if sourcefile.binary:
+                shutil.copy(sourcefile.path, join(staticpath, relative_path))
+            else:
+                gen(join(staticpath, relative_path), merge_source_file(sourcefile))
+        
         rprefix = reader.resource_prefix
         urlhandlers.append('urlhandlers.append((r"/%(rprefix)s/(.*)", tornado.web.StaticFileHandler, {"path": %(rserver_staticpath)s}))'%locals())
      
