@@ -224,7 +224,7 @@ launch(application, 80)
         print 'about to upload...'
         
         #check in the local code to git
-        sys_call('git add *', deploypath, failokay=True)
+        sys_call('git add --all', deploypath, failokay=True)
         sys_call('git commit -a -m "automated..."', deploypath, failokay=True)
         sys_call('git push origin uploaded', deploypath)
         
@@ -237,7 +237,7 @@ launch(application, 80)
                     # remote_exists = not fab.run("test -d %s" % server_deploypath).failed
                 with fab.cd(server_deploypath):
                     with fab.settings(warn_only=True):
-                        fab.run('git add *')
+                        fab.run('git add --all')
                         fab.run('git commit -m "saving any changes such as .pyc etc"')
                     fab.run('git merge uploaded')
                 fab.run(config_data['env.basic.startcommand'])
