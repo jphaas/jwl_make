@@ -591,4 +591,84 @@ function method_call(method, params, callback)
     });
 }
 
-serializeVal = JSON.stringify;
+//CODE FOR DEALING WITH SERIALIZATION OF NON_FLAT OBJECTS
+/*
+coffeescript source:
+
+deep_copy = (o, cache = []) ->
+    if typeof(o) != 'object'
+        return o
+    if o in cache
+        return 'CIRCULAR REFERENCE TO ' + o
+    cache.push o
+    if o.length
+        return deep_copy_a o, cache
+    return deep_copy_o o, cache
+
+deep_copy_a = (obj, cache) ->
+    return ((deep_copy i, cache) for i in obj)
+
+deep_copy_o = (obj, cache) ->
+	n_o = {}
+	for key, value of obj
+		n_o[key] = deep_copy value, cache
+	return n_o
+    
+serializeVal = (v) -> 
+    try
+        return JSON.stringify v
+    catch error
+        log_js_error 'unflattenable serialized thing', 'this code is in server_interface.js', 0, BrowserDetect.browser, BrowserDetect.version, BrowserDetect.OS, (deep_copy v), ->
+        return JSON.stringify deep_copy v
+
+*/
+var a, deep_copy, deep_copy_a, deep_copy_o;
+var __indexOf = Array.prototype.indexOf || function(item) {
+  for (var i = 0, l = this.length; i < l; i++) {
+    if (this[i] === item) return i;
+  }
+  return -1;
+};
+deep_copy = function(o, cache) {
+  if (cache == null) {
+    cache = [];
+  }
+  if (typeof o !== 'object') {
+    return o;
+  }
+  if (__indexOf.call(cache, o) >= 0) {
+    return 'CIRCULAR REFERENCE TO ' + o;
+  }
+  cache.push(o);
+  if (o.length) {
+    return deep_copy_a(o, cache);
+  }
+  return deep_copy_o(o, cache);
+};
+deep_copy_a = function(obj, cache) {
+  var i, _i, _len, _results;
+  _results = [];
+  for (_i = 0, _len = obj.length; _i < _len; _i++) {
+    i = obj[_i];
+    _results.push(deep_copy(i, cache));
+  }
+  return _results;
+};
+deep_copy_o = function(obj, cache) {
+  var key, n_o, value;
+  n_o = {};
+  for (key in obj) {
+    value = obj[key];
+    n_o[key] = deep_copy(value, cache);
+  }
+  return n_o;
+};
+
+serializeVal = function(v) {
+  try {
+    return JSON.stringify(v);
+  } catch (error) {
+    log_js_error('unflattenable serialized thing', 'this code is in server_interface.js', 0, BrowserDetect.browser, BrowserDetect.version, BrowserDetect.OS, deep_copy(v), function() {});
+    return JSON.stringify(deep_copy(v));
+  }
+};
