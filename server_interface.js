@@ -585,9 +585,7 @@ function method_call(method, params, callback, errorback)
             if (console && console.debug) {
                 console.debug(data);
             }
-            if (errorback) {
-                errorback(data);
-            }
+            errorback(data);
         }
         else
         {
