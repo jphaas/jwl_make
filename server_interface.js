@@ -573,7 +573,7 @@ function displayMessage(message, obj)
 }
 
 //wrapper on method_call_raw that displays an error
-function method_call(method, params, callback)
+function method_call(method, params, callback, errorback)
 {
     if (typeof(callback) != 'function') {
         throw 'callback must be a function, got: ' + callback;
@@ -582,7 +582,12 @@ function method_call(method, params, callback)
     {
         if (!success)
         {
-            displayMessage(data);
+            if (console && console.debug) {
+                console.debug(data);
+            }
+            if (errorback) {
+                errorback(data);
+            }
         }
         else
         {
