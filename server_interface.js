@@ -578,8 +578,8 @@ function method_call(method, params, callback, errorback)
     if (typeof(callback) != 'function') {
         throw 'callback must be a function, got: ' + callback;
     }
-    if (!errorback || typeof(callback) != 'function') {
-        throw 'errorback must be a function in call to ' + method;
+    if (!errorback) {
+        throw 'errorback missing from call to ' + method;
     }
     method_call_raw(method, params, function(success, data)
     {
