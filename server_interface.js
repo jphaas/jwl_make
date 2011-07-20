@@ -636,20 +636,27 @@ var __indexOf = Array.prototype.indexOf || function(item) {
   return -1;
 };
 deep_copy = function(o, cache) {
-  if (cache == null) {
-    cache = [];
+  try {
+      if (cache == null) {
+        cache = [];
+      }
+      if (!o) {
+        return o;
+      }
+      if (typeof o !== 'object') {
+        return o;
+      }
+      if (__indexOf.call(cache, o) >= 0) {
+        return 'CIRCULAR REFERENCE TO ' + o;
+      }
+      cache.push(o);
+      if (o.length) {
+        return deep_copy_a(o, cache);
+      }
+      return deep_copy_o(o, cache);
+  } catch (error) {
+    return 'uncopyable object : ' + error
   }
-  if (typeof o !== 'object') {
-    return o;
-  }
-  if (__indexOf.call(cache, o) >= 0) {
-    return 'CIRCULAR REFERENCE TO ' + o;
-  }
-  cache.push(o);
-  if (o.length) {
-    return deep_copy_a(o, cache);
-  }
-  return deep_copy_o(o, cache);
 };
 deep_copy_a = function(obj, cache) {
   var i, _i, _len, _results;
