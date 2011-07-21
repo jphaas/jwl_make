@@ -67,6 +67,11 @@ def do_action(project, actionargs, deploypath, global_config):
         dpath = join(dependspath, name)
         if url.startswith('local:'):
             url = url[6:]
+            ls = url.split(';')
+            i = 0
+            while not exists(ls[i]):
+                i += 1
+            url = ls[i]
             if exists(dpath):
                 rmtree(dpath)
             shutil.copytree(url, dpath, ignore=shutil.ignore_patterns('*.git', '*.svn'))
