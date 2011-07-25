@@ -143,8 +143,11 @@ def do_action(project, actionargs, deploypath, global_config):
                 url = url[6:]
                 ls = url.split(';')
                 i = 0
-                while not exists(ls[i]):
-                    i += 1
+                try:
+                    while not exists(ls[i]):
+                        i += 1
+                except:
+                       raise Exception('could not find path ' + url) 
                 url = ls[i]
                 if exists(dpath):
                     rmtree(dpath)
