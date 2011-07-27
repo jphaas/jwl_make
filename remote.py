@@ -6,7 +6,7 @@ import subprocess
 from shutil import rmtree
 import sys
 import shutil
-from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
+from jwl_make import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
 import tornado.web, tornado.auth
 
 #patching rmtree so it can deal with readonly files

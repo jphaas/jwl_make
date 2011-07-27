@@ -4,7 +4,7 @@ from os import listdir, mkdir, makedirs, remove, chdir
 from shutil import rmtree
 import sys
 import shutil
-from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import, sys_call
+from jwl_make import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import, sys_call
 import tornado.web, tornado.auth
 #import fabric.api as fab
         
