@@ -10,9 +10,9 @@ config.read(join(basedir, 'config.ini'))
 clean_path = list(sys.path)
 path = config.get('basic', 'path').split(';')
 sys.path.extend(path) #allows executing any python files in the path
-# import jwl_make
-# jwl_make.path = path
-# jwl_make.clean_path = clean_path
+import jwl_make
+jwl_make.path = path
+jwl_make.clean_path = clean_path
 
 def loadAction(name):
     try:

@@ -59,7 +59,7 @@ def do_action(project, actionargs, deploypath, global_config):
         
     
     #get the javascript necessary for server_interface
-    server_interface_path = resolve_import('jwl_make2/server_interface.js', None)
+    server_interface_path = resolve_import('jwl_make/server_interface.js', None)
     
     #fetch the dependencies
     depends = reader.config_items('depends')

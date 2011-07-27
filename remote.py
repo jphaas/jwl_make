@@ -172,7 +172,7 @@ def do_action(project, actionargs, deploypath, global_config):
         
         
         #build server_interface.js
-        server_interface_path = resolve_import('jwl_make2/server_interface.js', None)
+        server_interface_path = resolve_import('jwl_make/server_interface.js', None)
         del sys.path[:]
         sys.path.extend(clean_path)
         sys.path.append(dependspath)

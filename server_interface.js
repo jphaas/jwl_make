@@ -494,9 +494,9 @@ if (!JSON) {
 
 //puts a message on the error console
 function log(msg) {
-    setTimeout(function() {
-        throw new Error(msg);
-    }, 0);
+	if (window.console && window.console.log) {
+		window.console.log(msg);
+	}
 }
 
 
