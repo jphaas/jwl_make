@@ -13,9 +13,12 @@ SourceFile = namedtuple('SourceFile', 'path code dependencies binary')
 src_cache = {}
 
 def sys_call(args,cwd=None):
-    ret = subprocess.call(args, cwd=cwd, shell=True)
+    call = subprocess.Popen(args, cwd=cwd, shell=True, stdout=subprocess.PIPE)
+    ret = call.wait()
     if ret != 0:
         raise Exception('call failed: ' + args)
+    return call.stdout.read()
+ 
 
 #returns the SourceFile as a string of its dependencies followed by its code
 def merge_source_file(sourcefile):
@@ -41,6 +44,7 @@ def load_source_file(path, config = {}):
             include = 'include'
             depends = 'depends'
             get = 'get'
+            gitv = 'gitv'
             
             code = []
             dependencies = []
@@ -58,13 +62,22 @@ def load_source_file(path, config = {}):
                             command = l[inc + len(start):space]
                             e = l.find(end, space + len(' '))
                             fn = l[space:e].strip()
-                            if command not in [get, include, depends]:
+                            if command not in [get, include, depends, gitv]:
                                 print "skipping command: " + l[inc:e+len(end)]
                                 code.append(l[inc:e+len(end)])
                             else:
                                 try:
                                     if command == get:
                                         code.append(config[fn])
+                                    elif command == gitv:
+                                        fn = fn.split('|')
+                                        if len(fn) == 1: fn += [fn[0]]
+                                        thing = sys_call('git log -n 1 -- ' + fn[0], cwd=project_to_path(path_to_project(path)))
+                                        try:
+                                            thing = thing.split()[1]
+                                        except:
+                                            raise Exception('bad return from git log:\n' + thing)
+                                        code.append(fn[1] + '?v=' + thing)
                                     else:
                                         file = load_source_file(resolve_import(fn, path_to_project(path)), config)
                                         if command == include:
@@ -75,7 +88,7 @@ def load_source_file(path, config = {}):
                                             raise Exception('unrecognized command ' + command)
                                 except Exception, e:
                                     traceback.print_exc()
-                                    raise Exception('Error processing ' + command + ' ' + fn + ' in file ' + path + ': ' + e.message)
+                                    raise Exception('Error processing ' + command + ' ' + fn + ' in file ' + path, e)
                             l = l[e + len(end):]
                 except Exception:
                     print "ERROR trying to read in " + path
