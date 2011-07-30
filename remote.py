@@ -110,9 +110,9 @@ def do_action(project, actionargs, deploypath, global_config):
         for sourcefile in reader.get_html(config_data):
             stripped_name = basename(sourcefile.path).rsplit('.', 1)[0]
             gen(join(htmlpath, stripped_name), merge_source_file(sourcefile))
-            urlhandlers.append('urlhandlers.append((r"/(%(stripped_name)s)", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s}))'%locals())
+            urlhandlers.append('urlhandlers.append((r"/(%(stripped_name)s)", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s}))'%locals())
      
-        urlhandlers.append('urlhandlers.append((r"/()", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s, "default_filename": "index"}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/()", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s, "default_filename": "index"}))'%locals())
         
         #copy over resources
         if exists(staticpath):
@@ -126,7 +126,7 @@ def do_action(project, actionargs, deploypath, global_config):
                 gen(join(staticpath, relative_path), merge_source_file(sourcefile))
         
         rprefix = reader.resource_prefix
-        urlhandlers.append('urlhandlers.append((r"/%(rprefix)s/(.*)", tornado.web.StaticFileHandler, {"path": %(rserver_staticpath)s}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/%(rprefix)s/(.*)", NoCacheStaticHandler, {"path": %(rserver_staticpath)s}))'%locals())
      
         #copy over any raw python files
         for file in reader.list_python():
@@ -187,7 +187,7 @@ def do_action(project, actionargs, deploypath, global_config):
             f.write('\n')
             f.write(make_dummy_handler(index.main).write_js_interface())
             
-        urlhandlers.append('urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/(server_interface.js)", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s}))'%locals())
         
         urlhandlercode = '\n'.join(urlhandlers)
         
@@ -209,7 +209,7 @@ deployconfig.set(debug=%(is_debug)s)
 import index
 import tornado
 from jwl.tornado_launch import launch
-from jwl.remote_method import make_dummy_handler
+from jwl.remote_method import make_dummy_handler, NoCacheStaticHandler
 
 urlhandlers = []
 

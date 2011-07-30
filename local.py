@@ -14,6 +14,8 @@ def do_action(project, actionargs, deploypath, global_config):
     staticpath = join(deploypath, 'static')
     htmlpath = join(deploypath, 'html')
     
+
+    
     reader = JWLReader(project)
     
     reader.compile_coffee()
@@ -29,38 +31,6 @@ def do_action(project, actionargs, deploypath, global_config):
     except NoSectionError:
         pass
         
-    urlhandlers = []
-    #create the html pages
-    for sourcefile in reader.get_html(config_data):
-        stripped_name = basename(sourcefile.path).rsplit('.', 1)[0]
-        gen(join(htmlpath, stripped_name), merge_source_file(sourcefile))
-        urlhandlers.append((r"/(%s)"%stripped_name, tornado.web.StaticFileHandler, {"path": htmlpath}))
-        #pagenames.append(basename(sourcefile.path).rsplit('.', 1)[0])
- 
-    urlhandlers.append((r"/()", tornado.web.StaticFileHandler, {"path": htmlpath, "default_filename": "index"}))
-    
-    
-    #copy over resources
-    if exists(staticpath):
-        rmtree(staticpath)
-    for sourcefile in reader.get_resources(config_data):
-        relative_path = relpath(sourcefile.path, reader.resources)
-        if not exists(join(staticpath, dirname(relative_path))): makedirs(join(staticpath, dirname(relative_path)))
-        if sourcefile.binary:
-            shutil.copy(sourcefile.path, join(staticpath, relative_path))
-        else:
-            gen(join(staticpath, relative_path), merge_source_file(sourcefile))
-    
-    urlhandlers.append((r"/" + reader.resource_prefix + "/(.*)", tornado.web.StaticFileHandler, {"path": staticpath}))
- 
-    #copy over any raw python files
-    for file in reader.list_python():
-        shutil.copy(file, join(codepath, basename(file)))
-        
-    
-    #get the javascript necessary for server_interface
-    server_interface_path = resolve_import('jwl_make/server_interface.js', None)
-    
     #fetch the dependencies
     depends = reader.config_items('depends')
     for name, url in depends:
@@ -88,6 +58,44 @@ def do_action(project, actionargs, deploypath, global_config):
                     rmtree(dpath)
                     raise
             sys_call('git pull ' + url + ' master', dpath)
+        
+    #so I can use NoCacheStaticHandler up here
+    sys.path.append(dependspath)
+    from jwl.remote_method import NoCacheStaticHandler
+        
+    urlhandlers = []
+    #create the html pages
+    for sourcefile in reader.get_html(config_data):
+        stripped_name = basename(sourcefile.path).rsplit('.', 1)[0]
+        gen(join(htmlpath, stripped_name), merge_source_file(sourcefile))
+        urlhandlers.append((r"/(%s)"%stripped_name, NoCacheStaticHandler, {"path": htmlpath}))
+        #pagenames.append(basename(sourcefile.path).rsplit('.', 1)[0])
+ 
+    urlhandlers.append((r"/()", NoCacheStaticHandler, {"path": htmlpath, "default_filename": "index"}))
+    
+    
+    #copy over resources
+    if exists(staticpath):
+        rmtree(staticpath)
+    for sourcefile in reader.get_resources(config_data):
+        relative_path = relpath(sourcefile.path, reader.resources)
+        if not exists(join(staticpath, dirname(relative_path))): makedirs(join(staticpath, dirname(relative_path)))
+        if sourcefile.binary:
+            shutil.copy(sourcefile.path, join(staticpath, relative_path))
+        else:
+            gen(join(staticpath, relative_path), merge_source_file(sourcefile))
+    
+    urlhandlers.append((r"/" + reader.resource_prefix + "/(.*)", NoCacheStaticHandler, {"path": staticpath}))
+ 
+    #copy over any raw python files
+    for file in reader.list_python():
+        shutil.copy(file, join(codepath, basename(file)))
+        
+    
+    #get the javascript necessary for server_interface
+    server_interface_path = resolve_import('jwl_make/server_interface.js', None)
+    
+
                
     
     cookie_secret = reader.config('basic', 'cookie_secret')
@@ -115,7 +123,7 @@ def do_action(project, actionargs, deploypath, global_config):
     print 'importing tornado launch'
     from jwl.tornado_launch import launch
     print 'importing remote_method'
-    from jwl.remote_method import make_dummy_handler
+    from jwl.remote_method import make_dummy_handler, NoCacheStaticHandler
     
     print 'writing server_interface.js...'
     
@@ -129,7 +137,7 @@ def do_action(project, actionargs, deploypath, global_config):
         f.write('\n')
         f.write(make_dummy_handler(index.main).write_js_interface())
         
-    urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": htmlpath}))   
+    urlhandlers.append((r"/(server_interface.js)", NoCacheStaticHandler, {"path": htmlpath}))   
     
     #GOOGLE LOGIN
     from jwl.googleauth import LoginController
