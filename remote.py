@@ -39,7 +39,7 @@ def sys_call(args,cwd=None, failokay=False):
         
 def do_action(project, actionargs, deploypath, global_config):
     target = actionargs[0]
-    branch = 'release' if len(actionargs < 2) else actionargs[1]
+    branch = 'release' if len(actionargs) < 2 else actionargs[1]
     deploypath = join(deploypath, target)
 
     dependspath = join(deploypath, 'depends')
