@@ -6,7 +6,7 @@ import subprocess
 from shutil import rmtree
 import sys
 import shutil
-from jwl_make_lib import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
+from jwl_make import JWLReader, gen, need_regen, merge_source_file, project_to_path, clean_path, resolve_import
 import tornado.web, tornado.auth
 
 #patching rmtree so it can deal with readonly files
@@ -39,6 +39,7 @@ def sys_call(args,cwd=None, failokay=False):
         
 def do_action(project, actionargs, deploypath, global_config):
     target = actionargs[0]
+    branch = 'release' if len(actionargs) < 2 else actionargs[1]
     deploypath = join(deploypath, target)
 
     dependspath = join(deploypath, 'depends')
@@ -51,7 +52,7 @@ def do_action(project, actionargs, deploypath, global_config):
     
     #SWITCH TO RELEASE BRANCH
     try:
-        sys_call('git checkout release', reader.path)
+        sys_call('git checkout ' + branch, reader.path)
         
         reader.compile_coffee()
         
@@ -110,9 +111,9 @@ def do_action(project, actionargs, deploypath, global_config):
         for sourcefile in reader.get_html(config_data):
             stripped_name = basename(sourcefile.path).rsplit('.', 1)[0]
             gen(join(htmlpath, stripped_name), merge_source_file(sourcefile))
-            urlhandlers.append('urlhandlers.append((r"/(%(stripped_name)s)", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s}))'%locals())
+            urlhandlers.append('urlhandlers.append((r"/(%(stripped_name)s)", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s}))'%locals())
      
-        urlhandlers.append('urlhandlers.append((r"/()", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s, "default_filename": "index"}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/()", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s, "default_filename": "index"}))'%locals())
         
         #copy over resources
         if exists(staticpath):
@@ -126,7 +127,7 @@ def do_action(project, actionargs, deploypath, global_config):
                 gen(join(staticpath, relative_path), merge_source_file(sourcefile))
         
         rprefix = reader.resource_prefix
-        urlhandlers.append('urlhandlers.append((r"/%(rprefix)s/(.*)", tornado.web.StaticFileHandler, {"path": %(rserver_staticpath)s}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/%(rprefix)s/(.*)", NoCacheStaticHandler, {"path": %(rserver_staticpath)s}))'%locals())
      
         #copy over any raw python files
         for file in reader.list_python():
@@ -172,7 +173,7 @@ def do_action(project, actionargs, deploypath, global_config):
         
         
         #build server_interface.js
-        server_interface_path = resolve_import('jwl_make2/server_interface.js', None)
+        server_interface_path = resolve_import('jwl_make/server_interface.js', None)
         del sys.path[:]
         sys.path.extend(clean_path)
         sys.path.append(dependspath)
@@ -187,7 +188,7 @@ def do_action(project, actionargs, deploypath, global_config):
             f.write('\n')
             f.write(make_dummy_handler(index.main).write_js_interface())
             
-        urlhandlers.append('urlhandlers.append((r"/(server_interface.js)", tornado.web.StaticFileHandler, {"path": %(rserver_htmlpath)s}))'%locals())
+        urlhandlers.append('urlhandlers.append((r"/(server_interface.js)", NoCacheStaticHandler, {"path": %(rserver_htmlpath)s}))'%locals())
         
         urlhandlercode = '\n'.join(urlhandlers)
         
@@ -209,7 +210,7 @@ deployconfig.set(debug=%(is_debug)s)
 import index
 import tornado
 from jwl.tornado_launch import launch
-from jwl.remote_method import make_dummy_handler
+from jwl.remote_method import make_dummy_handler, NoCacheStaticHandler
 
 urlhandlers = []
 

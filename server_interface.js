@@ -494,9 +494,9 @@ if (!JSON) {
 
 //puts a message on the error console
 function log(msg) {
-    setTimeout(function() {
-        throw new Error(msg);
-    }, 0);
+	if (window.console && window.console.log) {
+		window.console.log(msg);
+	}
 }
 
 
@@ -585,8 +585,8 @@ function method_call(method, params, callback, errorback)
     {
         if (!success)
         {
-            if (console && console.debug) {
-                console.debug(data);
+            if (window.console && window.console.debug) {
+                window.console.debug(data);
             }
             errorback(data);
         }
