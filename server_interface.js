@@ -579,7 +579,7 @@ function method_call(method, params, callback, errorback)
         throw 'callback must be a function, got: ' + callback;
     }
     if (!errorback) {
-        throw 'errorback missing from call to ' + method;
+        throw new Error('errorback missing from call to ' + method);
     }
     method_call_raw(method, params, function(success, data)
     {
