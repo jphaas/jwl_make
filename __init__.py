@@ -7,17 +7,39 @@ import io
 from collections import namedtuple
 import traceback
 import codecs
+from greenlet import greenlet
 
 SourceFile = namedtuple('SourceFile', 'path code dependencies binary')
 
 src_cache = {}
 
-def sys_call(args,cwd=None):
+def sys_call(args,cwd=None): #now greenlet enabled!
     call = subprocess.Popen(args, cwd=cwd, shell=True, stdout=subprocess.PIPE)
-    ret = call.wait()
+    pg = greenlet.getcurrent().parent
+    if pg is None:
+        ret = call.wait()
+    else:
+        ret = None
+        while ret is None:
+            ret = call.poll()
+            pg.switch()
     if ret != 0:
         raise Exception('call failed: ' + args)
     return call.stdout.read()
+    
+#takes a list of functions, executes them in semi-parallel using greenlets, and yields the results.  Not guaranteed to return results in the same order.
+def gr_list(funcs):
+    greenlets = [greenlet(f) for f in funcs]
+    done = False
+    while not done:
+        done = True
+        for g in greenlets:
+            if not g.dead:
+                r = g.switch()
+                if g.dead:
+                    yield r
+                else:
+                    done = False
  
 
 #returns the SourceFile as a string of its dependencies followed by its code
@@ -38,6 +60,7 @@ def load_source_file(path, config = {}):
     Translates a path to a file into a SourceFile object
     """
     if not src_cache.has_key(path):
+        src_cache[path] = 'in progress'
         if splitext(path)[1] in TEXT_FILES:
             start = '<?'
             end = '?>'
@@ -72,7 +95,9 @@ def load_source_file(path, config = {}):
                                     elif command == gitv:
                                         fn = fn.split('|')
                                         if len(fn) == 1: fn += [fn[0]]
+                                        print 'about to check: ' + fn[0]
                                         thing = sys_call('git log -n 1 -- ' + fn[0], cwd=project_to_path(path_to_project(path)))
+                                        print 'finished checking: ' + fn[0]
                                         try:
                                             thing = thing.split()[1]
                                         except:
@@ -97,7 +122,11 @@ def load_source_file(path, config = {}):
         else:
             sf = SourceFile(path=path, code=None, dependencies=[], binary=True)
         src_cache[path] = sf
+    else:
+        while src_cache[path] == 'in progress':
+            greenlet.getcurrent().parent.switch()
     return src_cache[path]
+
 
 class JWLReader:
     """Loads a project into memory and provides parsing, compilation, and querying servics on it"""
@@ -151,7 +180,8 @@ class JWLReader:
         
     def get_html(self, config = {}):
         """returns a list of SourceFiles corresponding to html files in the root folder"""
-        return [load_source_file(join(self.path, file), config) for file in listdir(self.path) if splitext(file)[1] == '.html']
+        def f(file): return lambda: load_source_file(join(self.path, file), config)
+        return gr_list([f(file) for file in listdir(self.path) if splitext(file)[1] == '.html'])
         
     def get_resources(self, config = {}):
         """returns an iterable of SourceFiles corresponding to files in the resources folder"""
@@ -160,8 +190,9 @@ class JWLReader:
                 if isdir(join(dir, file)):
                     for ret in get_r(join(dir, file)): yield ret
                 else:
-                    yield load_source_file(join(dir, file), config)
-        return get_r(self.resources)            
+                    def f(dir, file): return lambda: load_source_file(join(dir, file), config)
+                    yield f(dir, file)
+        return gr_list(get_r(self.resources))
     
 def need_regen(target, sources):
     """given a target and its sources, does the target need to be regenerated?"""
