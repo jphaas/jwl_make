@@ -95,13 +95,14 @@ def load_source_file(path, config = {}):
                                     elif command == gitv:
                                         fn = fn.split('|')
                                         if len(fn) == 1: fn += [fn[0]]
-                                        print 'about to check: ' + fn[0]
-                                        thing = sys_call('git log -n 1 -- ' + fn[0], cwd=project_to_path(path_to_project(path)))
-                                        print 'finished checking: ' + fn[0]
-                                        try:
-                                            thing = thing.split()[1]
-                                        except:
-                                            raise Exception('bad return from git log:\n' + thing)
+                                        # print 'about to check: ' + fn[0]
+                                        # thing = sys_call('git log -n 1 -- ' + fn[0], cwd=project_to_path(path_to_project(path)))
+                                        # print 'finished checking: ' + fn[0]
+                                        # try:
+                                            # thing = thing.split()[1]
+                                        # except:
+                                            # raise Exception('bad return from git log:\n' + thing)
+                                        thing = str(getmtime(join(project_to_path(path_to_project(path)),fn[0])))
                                         code.append(fn[1] + '?v=' + thing)
                                     else:
                                         file = load_source_file(resolve_import(fn, path_to_project(path)), config)
