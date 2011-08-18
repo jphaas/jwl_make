@@ -156,7 +156,7 @@ def do_action(project, actionargs, deploypath, global_config):
     deployconfig.set2('env', 'local')
     
     print 'starting local server...'
-    urlhandlers.append((r"/" + reader.server_prefix, index.main))
+    urlhandlers.append((r"/" + reader.server_prefix + r".*", index.main))
     application = tornado.web.Application(urlhandlers, cookie_secret=cookie_secret, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
  
     launch(application, int(global_config.get('local', 'port')))

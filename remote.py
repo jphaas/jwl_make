@@ -222,7 +222,7 @@ urlhandlers = []
 
 if __name__ == '__main__':
     print 'starting server...'
-    urlhandlers.append((r"/%(readerserverprefix)s", index.main))
+    urlhandlers.append((r"/%(readerserverprefix)s.*", index.main))
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
 
 launch(application, 80)
