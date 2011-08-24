@@ -511,7 +511,7 @@ callback(success, data) -- called when the method returns.  If success is true, 
 function method_call_raw(method, params, callback)
 {
     if (typeof(callback) != 'function') {
-        throw 'callback must be a function, got: ' + callback;
+        throw new Error('callback must be a function, got: ' + callback);
     }
     var p = params
 	for (pname in p)
@@ -576,7 +576,7 @@ function displayMessage(message, obj)
 function method_call(method, params, callback, errorback)
 {
     if (typeof(callback) != 'function') {
-        throw 'callback must be a function, got: ' + callback;
+        throw new Error('callback must be a function, got: ' + callback);
     }
     if (!errorback) {
         throw new Error('errorback missing from call to ' + method);
