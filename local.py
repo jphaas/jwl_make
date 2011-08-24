@@ -116,6 +116,16 @@ def do_action(project, actionargs, deploypath, global_config):
     from jwl.DB.hashdb import HashDB
     deployconfig.set(dbengine=HashDB)
     deployconfig.set(debug=True)
+    
+    #SETUP DEPLOY CONFIG
+    print 'setting environment variables:'
+    for section in reader._config.sections():#global_config.sections():
+        if section.startswith('local_'):
+            for key, value in reader._config.items(section):#global_config.items(section):
+                print 'env.' + section[6:] + '.' + key + ' = ' + value
+                deployconfig.set2('env.' + section[6:] + '.' + key, value)
+    deployconfig.set2('IS_LOCAL', True)
+    deployconfig.set2('env', 'local')
        
     print 'importing index'
     import index
@@ -144,16 +154,6 @@ def do_action(project, actionargs, deploypath, global_config):
     urlhandlers.append((r"/auth/(.*)", LoginController))
     
     print 'setting up deploy config...'
-    
-    #SETUP DEPLOY CONFIG
-    print 'setting environment variables:'
-    for section in reader._config.sections():#global_config.sections():
-        if section.startswith('local_'):
-            for key, value in reader._config.items(section):#global_config.items(section):
-                print 'env.' + section[6:] + '.' + key + ' = ' + value
-                deployconfig.set2('env.' + section[6:] + '.' + key, value)
-    deployconfig.set2('IS_LOCAL', True)
-    deployconfig.set2('env', 'local')
     
     print 'starting local server...'
     urlhandlers.append((r"/" + reader.server_prefix + r".*", index.main))
