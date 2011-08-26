@@ -500,6 +500,8 @@ function log(msg) {
 }
 
 
+window.special_exception_registry = {}
+
 /*
 Calls a remote method.
 
@@ -527,7 +529,14 @@ function method_call_raw(method, params, callback)
     
     function success(data)
     {
-        if (data && data.server_error)
+    	if (data && data.special_exception) {
+    		if (!window.special_exception_registry[data.special_exception_name]) {
+    			throw new Error('Unrecognized special exception: ' + data.special_exception_name);
+    		} else {
+    			window.special_exception_registry[data.special_exception_name](data.message, callback);
+    		}
+    	} 
+        else if (data && data.server_error)
         {
             log(data.stacktrace);
             callback(false, data.message);
