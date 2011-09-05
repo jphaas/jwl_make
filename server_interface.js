@@ -542,10 +542,7 @@ function method_call_raw(method, params, callback)
         error: error,
         type: 'POST',
         url: server,
-        success: success,
-        xhrFields: {
-      		withCredentials: true
-   		}
+        success: success
     });
 }
 
