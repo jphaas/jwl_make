@@ -30,6 +30,12 @@ def do_action(project, actionargs, deploypath, global_config):
         config_data['facebook_app_id'] = global_config.get('facebook', 'facebook_appid_local')
     except NoSectionError:
         pass
+    #this is a dupe of deploy config setup code below.
+    for section in reader._config.sections():#global_config.sections():
+        if section.startswith('local_'):
+            for key, value in reader._config.items(section):#global_config.items(section):
+                config_data['env.' + section[6:] + '.' + key] = value
+    
         
     #fetch the dependencies
     depends = reader.config_items('depends')
