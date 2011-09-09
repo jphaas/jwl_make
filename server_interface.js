@@ -498,7 +498,7 @@ params - key/values pairs representing the parameters and arguments to pass to t
 callback(success, data) -- called when the method returns.  If success is true, data will contain the method results,
     if success is false, data will contain an error message
 */
-function method_call_raw(method, params, callback)
+function method_call_raw(method, params, callback, type)
 {
     if (typeof(callback) != 'function') {
         throw new Error('callback must be a function, got: ' + callback);
@@ -540,9 +540,10 @@ function method_call_raw(method, params, callback)
         data: p,
         dataType: 'json',
         error: error,
-        type: 'POST',
+        type: type,
         url: server,
-        success: success
+        success: success,
+        cache: type.toLowerCase() == 'get'
     });
 }
 
@@ -570,8 +571,11 @@ function displayMessage(message, obj)
 }
 
 //wrapper on method_call_raw that displays an error
-function method_call(method, params, callback, errorback)
+function method_call(method, params, callback, errorback, type)
 {
+	if (!type) {
+		type = 'POST';
+	}
     if (typeof(callback) != 'function') {
         throw new Error('callback must be a function, got: ' + callback);
     }
@@ -591,7 +595,7 @@ function method_call(method, params, callback, errorback)
         {
             callback(data);
         }
-    });
+    }, type);
 }
 
 //CODE FOR DEALING WITH SERIALIZATION OF NON_FLAT OBJECTS
