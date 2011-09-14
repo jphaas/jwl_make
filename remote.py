@@ -52,7 +52,8 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
     
     #SWITCH TO RELEASE BRANCH
     try:
-        sys_call('git checkout ' + branch, reader.path)
+        if branch != 'CURRENT':
+            sys_call('git checkout ' + branch, reader.path)
         
         reader.compile_coffee()
         
@@ -270,4 +271,5 @@ launch(application, %(server_port)s)
          
     finally:
         #SWITCH BACK TO MASTER BRANCH
-        sys_call('git checkout master', reader.path)
+        if branch != 'CURRENT':
+            sys_call('git checkout master', reader.path)

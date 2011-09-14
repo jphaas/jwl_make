@@ -23,4 +23,4 @@ def do_action(project, actionargs, deploypath, global_config):
         sys_call('git commit -m "initial commit"', server_path)
         sys_call("git branch uploaded", server_path)
         
-    remote.do_action(project, ['local'], deploypath, global_config, extra_env)
+    remote.do_action(project, ['local', 'CURRENT'], deploypath, global_config, extra_env)
