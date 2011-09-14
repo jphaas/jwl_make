@@ -54,7 +54,7 @@ def merge_source_file(sourcefile):
     add(sourcefile, [sourcefile])
     return '\n'.join([f.code for f in sorted])
     
-TEXT_FILES = ['.html', '.css', '.js', '.include'] #.coffee gets compiled to js prior to this step: pass through depends commands in a comment to the generated js
+TEXT_FILES = ['.html', '.css', '.js', '.include', '.lua'] #.coffee gets compiled to js prior to this step: pass through depends commands in a comment to the generated js
 def load_source_file(path, config = {}):
     """
     Translates a path to a file into a SourceFile object
