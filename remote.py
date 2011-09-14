@@ -37,7 +37,7 @@ def sys_call(args,cwd=None, failokay=False):
         else:
             raise Exception('call failed: ' + args)
         
-def do_action(project, actionargs, deploypath, global_config):
+def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
     target = actionargs[0]
     branch = 'release' if len(actionargs) < 2 else actionargs[1]
     deploypath = join(deploypath, target)
@@ -71,6 +71,8 @@ def do_action(project, actionargs, deploypath, global_config):
                     dplines.append("deployconfig.set2('env.%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
                     config_data['env.' + section[len(envkey):] + '.' + key] = value
         config_data['env'] = target
+        for key, value in extra_env.iteritems():
+            config_data[key] = value
                     
         #server_side paths
         server_deploypath = config_data['env.basic.deploypath']
@@ -85,6 +87,7 @@ def do_action(project, actionargs, deploypath, global_config):
         
             
         deployrepo = config_data['env.basic.deployrepo']
+        
         if not exists(deploypath):
             makedirs(deploypath)
             sys_call('git init', deploypath)
@@ -104,7 +107,7 @@ def do_action(project, actionargs, deploypath, global_config):
         gen(join(codepath, 'deployconfig_init.py'), '\n'.join(dplines))
         
         #legacy...
-        config_data['facebook_app_id'] = config_data['env.facebook.facebook_app_id']
+        # config_data['facebook_app_id'] = config_data['env.facebook.facebook_app_id']
             
         urlhandlers = []
         #create the html pages
@@ -195,6 +198,8 @@ def do_action(project, actionargs, deploypath, global_config):
         readerserverprefix = reader.server_prefix
         
         is_debug = config_data['env.basic.debug']
+        
+        server_port = config_data['env.basic.port']
                 
         #build the execution file
         launch_server = r"""
@@ -225,7 +230,7 @@ if __name__ == '__main__':
     urlhandlers.append((r"/%(readerserverprefix)s.*", index.main))
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s, gzip=True)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
 
-launch(application, 80)
+launch(application, %(server_port)s)
         """%locals()
         
         gen(join(codepath, 'launch_server.py'), launch_server)
@@ -237,24 +242,30 @@ launch(application, 80)
         sys_call('git commit -a -m "automated..."', deploypath, failokay=True)
         sys_call('git push origin uploaded', deploypath)
         
-        keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
         #Upload to server
-        import fabric.api as fab
+        host_string = config_data['env.basic.host']
+        if host_string == 'localhost':
+            execute = sys_call
+        else:
+            import fabric.api as fab
+            def execute(args, cwd, fail_okay):
+                with fab.settings(host_string=host_string,key_filename=keyfile,disable_known_hosts=True):
+                    with fab.cd(cwd):
+                        with fab.settings(warn_only=fail_okay):
+                            fb.run(args)
+            keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
+        
         try:
-            with fab.settings(host_string=config_data['env.basic.host'],key_filename=keyfile,disable_known_hosts=True):
-                # with fab.settings(warn_only=True):
-                    # remote_exists = not fab.run("test -d %s" % server_deploypath).failed
-                with fab.cd(server_deploypath):
-                    with fab.settings(warn_only=True):
-                        fab.run('git add --all')
-                        fab.run('git commit -m "saving any changes such as .pyc etc"')
-                    fab.run('git merge uploaded')
-                fab.run(config_data['env.basic.startcommand'])
+            execute('git add --all', server_deploypath, True)
+            execute('git commit -m "saving any changes such as .pyc etc', server_deploypath, True)
+            execute('git merge uploaded', server_deploypath, False)
+            execute(config_data['env.basic.startcommand'], server_deploypath, False)
         finally:
-            from fabric.state import connections
-            for key in connections.keys():
-                connections[key].close()
-                del connections[key]
+            if host_string != 'localhost':
+                from fabric.state import connections
+                for key in connections.keys():
+                    connections[key].close()
+                    del connections[key]
                 
          
     finally:
