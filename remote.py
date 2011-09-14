@@ -253,7 +253,7 @@ launch(application, %(server_port)s)
                 with fab.settings(host_string=host_string,key_filename=keyfile,disable_known_hosts=True):
                     with fab.cd(cwd):
                         with fab.settings(warn_only=fail_okay):
-                            fb.run(args)
+                            fab.run(args)
             keyfile = global_config.get('keys', config_data['env.basic.sshkey']) 
         
         try:
