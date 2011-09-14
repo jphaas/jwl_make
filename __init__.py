@@ -91,7 +91,7 @@ def load_source_file(path, config = {}):
                             else:
                                 try:
                                     if command == get:
-                                        code.append(config[fn])
+                                        code.append(str(config[fn]))
                                     elif command == gitv:
                                         fn = fn.split('|')
                                         if len(fn) == 1: fn += [fn[0]]
