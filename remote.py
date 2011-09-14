@@ -258,7 +258,7 @@ launch(application, %(server_port)s)
         
         try:
             execute('git add --all', server_deploypath, True)
-            execute('git commit -m "saving any changes such as .pyc etc', server_deploypath, True)
+            execute('git commit -a -m "saving any changes such as .pyc etc"', server_deploypath, True)
             execute('git merge uploaded', server_deploypath, False)
             execute(config_data['env.basic.startcommand'], server_deploypath, False)
         finally:
