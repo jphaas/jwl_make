@@ -227,12 +227,13 @@ urlhandlers = []
 # urlhandlers.append((r"/auth/(.*)", LoginController))
 
 if __name__ == '__main__':
-    print 'starting server...'
     urlhandlers.append((r"/%(readerserverprefix)s.*", index.main))
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s, gzip=True)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
-
-launch(application, %(server_port)s)
-index.do_startup()
+    print 'about to run startup code'
+    index.do_startup()
+    print 'startup code complete, starting server...'
+    launch(application, %(server_port)s)
+    
         """%locals()
         
         gen(join(codepath, 'launch_server.py'), launch_server)
