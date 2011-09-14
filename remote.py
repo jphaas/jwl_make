@@ -232,6 +232,7 @@ if __name__ == '__main__':
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s, gzip=True)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
 
 launch(application, %(server_port)s)
+index.do_startup()
         """%locals()
         
         gen(join(codepath, 'launch_server.py'), launch_server)
