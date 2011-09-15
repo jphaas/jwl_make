@@ -230,7 +230,7 @@ if __name__ == '__main__':
     urlhandlers.append((r"/%(readerserverprefix)s.*", index.main))
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s, gzip=True)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
     print 'about to run startup code'
-    index.do_startup()
+    index.do_startup(application)
     print 'startup code complete, starting server...'
     launch(application, %(server_port)s)
     
