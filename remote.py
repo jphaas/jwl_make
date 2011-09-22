@@ -74,7 +74,8 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
                     rvalue = repr(value)
                     dplines.append("deployconfig.set2('%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
                     dplines.append("print '%(sectiontitle)s.%(key)s', '=', %(rvalue)s"%locals())
-                    config_data['env.' + section[len(envkey):] + '.' + key] = value
+                    config_data[sectiontitle + '.' + key] = value
+                    print sectiontitle + '.' + key, '=', value
         config_data['env'] = target
         for key, value in extra_env.iteritems():
             config_data[key] = value
