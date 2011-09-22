@@ -65,11 +65,15 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
         dplines = ['from jwl import deployconfig']
         config_data = {}
         for section in reader._config.sections():
-            if section.startswith(envkey):
-                for key, value in reader._config.items(section):
-                    sectiontitle = section[len(envkey):]
+            for key, value in reader._config.items(section):
+                if section.startswith(envkey) or section.find('_') == -1:
+                    if section.startswith(envkey):
+                        sectiontitle = 'env.' + section[len(envkey):]
+                    else:
+                        sectiontitle = section
                     rvalue = repr(value)
-                    dplines.append("deployconfig.set2('env.%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
+                    dplines.append("deployconfig.set2('%(sectiontitle)s.%(key)s', %(rvalue)s)"%locals())
+                    dplines.append("print '%(sectiontitle)s.%(key)s', '=', %(rvalue)s"%locals())
                     config_data['env.' + section[len(envkey):] + '.' + key] = value
         config_data['env'] = target
         for key, value in extra_env.iteritems():
