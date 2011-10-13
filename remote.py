@@ -57,6 +57,7 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
         
         reader.compile_coffee()
         
+        
 
         
            
@@ -78,7 +79,16 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
                     print sectiontitle + '.' + key, '=', value
         config_data['env'] = target
         for key, value in extra_env.iteritems():
+            rvalue = repr(value)
+            dplines.append("deployconfig.set2('%(key)s', %(rvalue)s)"%locals())
+            dplines.append("print '%(key)s', '=', %(rvalue)s"%locals())
             config_data[key] = value
+            
+        #run any custom compilation code
+        if exists(join(reader.path, 'compile.py')):
+            import imp
+            compile_script = imp.load_source('compile', join(reader.path, 'compile.py'))
+            compile_script.run(reader)
                     
         #server_side paths
         server_deploypath = config_data['env.basic.deploypath']
