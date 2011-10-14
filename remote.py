@@ -86,9 +86,15 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
             
         #run any custom compilation code
         if exists(join(reader.path, 'compile.py')):
-            import imp
-            compile_script = imp.load_source('compile', join(reader.path, 'compile.py'))
-            compile_script.run(reader)
+            old_path = list(sys.path)
+            sys.path.append(reader.path)
+            
+            import compile
+            compile
+            compile.run(reader)
+            
+            del sys.path[:]
+            sys.path.extend(old_path)
                     
         #server_side paths
         server_deploypath = config_data['env.basic.deploypath']
