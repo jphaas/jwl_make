@@ -83,18 +83,6 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
             dplines.append("deployconfig.set2('%(key)s', %(rvalue)s)"%locals())
             dplines.append("print '%(key)s', '=', %(rvalue)s"%locals())
             config_data[key] = value
-            
-        #run any custom compilation code
-        if exists(join(reader.path, 'compile.py')):
-            old_path = list(sys.path)
-            sys.path.append(reader.path)
-            
-            import compile
-            compile
-            compile.run(reader)
-            
-            del sys.path[:]
-            sys.path.extend(old_path)
                     
         #server_side paths
         server_deploypath = config_data['env.basic.deploypath']
@@ -124,6 +112,49 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
             
         for p in (dependspath, codepath, htmlpath, staticpath):
             if not exists(p): makedirs(p)
+            
+        print 'fetching dependencies'
+        
+        #fetch the dependencies
+        depends = reader.config_items('depends')
+        for name, url in depends:
+            dpath = join(dependspath, name)
+            if url.startswith('local:'):
+                url = url[6:]
+                ls = url.split(';')
+                i = 0
+                try:
+                    while not exists(ls[i]):
+                        i += 1
+                except:
+                       raise Exception('could not find path ' + url) 
+                url = ls[i]
+                if exists(dpath):
+                    rmtree(dpath)
+                shutil.copytree(url, dpath, ignore=shutil.ignore_patterns('*.git', '*.svn'))
+            else:
+                if not exists(dpath):
+                    try:
+                        makedirs(dpath)
+                        sys_call('git init', dpath)
+                        #sys_call('git remote add origin ' + url, dpath)
+                    except:
+                        rmtree(dpath)
+                        raise
+                sys_call('git pull ' + url + ' master', dpath)
+            
+        #run any custom compilation code
+        if exists(join(reader.path, 'compile.py')):
+            old_path = list(sys.path)
+            sys.path.append(reader.path)
+            sys.path.append(dependspath)
+            
+            import compile
+            compile
+            compile.run(reader)
+            
+            del sys.path[:]
+            sys.path.extend(old_path)
 
         
         gen(join(codepath, 'deployconfig_init.py'), '\n'.join(dplines))
@@ -158,36 +189,6 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
         for file in reader.list_python():
             shutil.copy(file, join(codepath, basename(file)))
             
-          
-        print 'fetching dependencies'
-        
-        #fetch the dependencies
-        depends = reader.config_items('depends')
-        for name, url in depends:
-            dpath = join(dependspath, name)
-            if url.startswith('local:'):
-                url = url[6:]
-                ls = url.split(';')
-                i = 0
-                try:
-                    while not exists(ls[i]):
-                        i += 1
-                except:
-                       raise Exception('could not find path ' + url) 
-                url = ls[i]
-                if exists(dpath):
-                    rmtree(dpath)
-                shutil.copytree(url, dpath, ignore=shutil.ignore_patterns('*.git', '*.svn'))
-            else:
-                if not exists(dpath):
-                    try:
-                        makedirs(dpath)
-                        sys_call('git init', dpath)
-                        #sys_call('git remote add origin ' + url, dpath)
-                    except:
-                        rmtree(dpath)
-                        raise
-                sys_call('git pull ' + url + ' master', dpath)
         
         cookie_secret = repr(reader.config('basic', 'cookie_secret'))
         
