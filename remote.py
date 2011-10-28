@@ -253,6 +253,7 @@ if __name__ == '__main__':
     print 'about to run startup code'
     index.do_startup(urlhandlers)
     application = tornado.web.Application(urlhandlers, cookie_secret=%(cookie_secret)s, gzip=True)#, google_consumer_key=google_consumer_key, google_consumer_secret=google_consumer_secret)
+    index.main._my_application = application
     print 'startup code complete, starting server...'
     launch(application, %(server_port)s)
     

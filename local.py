@@ -19,6 +19,8 @@ def do_action(project, actionargs, deploypath, global_config):
         sys_call("echo 'logs' >> .gitignore", server_path)
         sys_call("echo '*.pyo' >> .gitignore", server_path)
         sys_call("echo '*.pyc' >> .gitignore", server_path)
+        sys_call("echo 'generated' >> .gitignore", server_path)
+        
         sys_call("git add *", server_path)
         sys_call('git commit -m "initial commit"', server_path)
         sys_call("git branch uploaded", server_path)
