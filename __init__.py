@@ -91,7 +91,7 @@ def load_source_file(path, config = {}):
                             else:
                                 try:
                                     if command == get:
-                                        code.append(str(config[fn]))
+                                        code.append(unicode(config[fn]))
                                     elif command == gitv:
                                         fn = fn.split('|')
                                         if len(fn) == 1: fn += [fn[0]]
@@ -102,7 +102,7 @@ def load_source_file(path, config = {}):
                                             # thing = thing.split()[1]
                                         # except:
                                             # raise Exception('bad return from git log:\n' + thing)
-                                        thing = str(getmtime(join(project_to_path(path_to_project(path)),fn[0])))
+                                        thing = unicode(getmtime(join(project_to_path(path_to_project(path)),fn[0])))
                                         code.append(fn[1] + '?v=' + thing)
                                     else:
                                         file = load_source_file(resolve_import(fn, path_to_project(path)), config)
