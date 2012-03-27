@@ -16,10 +16,8 @@ def do_action(project, actionargs, deploypath, global_config):
     if not exists(server_path):
         makedirs(server_path)
         sys_call('git init', server_path)
-        sys_call("echo logs >> .gitignore", server_path)
-        sys_call("echo *.pyo >> .gitignore", server_path)
-        sys_call("echo *.pyc >> .gitignore", server_path)
-        sys_call("echo generated >> .gitignore", server_path)
+        with open(join(server_path, '.gitignore'), 'w') as o:
+            o.write('logs\n*.pyo\n*.pyc\ngenerated')
         
         sys_call("git add *", server_path)
         sys_call('git commit -m "initial commit"', server_path)

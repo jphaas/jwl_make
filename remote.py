@@ -100,10 +100,7 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
         
         if not exists(deploypath):
             makedirs(deploypath)
-            sys_call('git init', deploypath)
-            sys_call('git remote add origin ' + deployrepo, deploypath)
-            sys_call('git pull origin uploaded', deploypath)
-            sys_call('git branch uploaded', deploypath)
+            sys_call('git clone ' + deployrepo + ' ' + deploypath)
             sys_call('git checkout uploaded', deploypath)
         else: #clean but don't remove the .git directory
             sys_call('git pull origin uploaded', deploypath)
@@ -112,6 +109,7 @@ def do_action(project, actionargs, deploypath, global_config, extra_env = {}):
             
         for p in (dependspath, codepath, htmlpath, staticpath):
             if not exists(p): makedirs(p)
+            
             
         print 'fetching dependencies'
         
